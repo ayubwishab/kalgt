@@ -171,8 +171,8 @@
 
 <div class="container">
     <header>
-        <h1>Kalender Shift Work & Libur Nasional</h1>
-        <p>PT Gajah Tunggal Tbk — Sistem Rotasi Resmi 4G3S (A, B, C, D)</p>
+        <h1>Kalender Shift Work & Hari Libur PT Gajah Tunggal Tbk</h1>
+        <p>Sistem Rotasi Resmi 4G3S (Grup A, B, C, D) Presisi Aplikasi GT</p>
     </header>
 
     <div class="controls">
@@ -204,7 +204,7 @@
         <div class="legend-item"><span class="badge badge-b">Grup B</span> Kuning</div>
         <div class="legend-item"><span class="badge badge-c">Grup C</span> Hijau</div>
         <div class="legend-item"><span class="badge badge-d">Grup D</span> Biru</div>
-        <div class="legend-item" style="margin-left: 15px;"><span class="badge b-nasional">Merah</span> Libur Pabrik / Nasional</div>
+        <div class="legend-item" style="margin-left: 15px;"><span class="badge b-nasional">Merah / X</span> Libur Pabrik (Semua Libur)</div>
     </div>
 
     <div class="table-container">
@@ -234,8 +234,9 @@
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-    // Anchor Date: 1 Maret 2027 (Master Offset = 0)
-    const anchorDate = new Date(2027, 2, 1);
+    // Anchor Date: 1 November 2026 (Index Master = 2)
+    const anchorDate = new Date(2026, 10, 1);
+    const anchorMasterIndex = 2;
     
     // Master 20-Day Rotation Sequence (Vector: [A, B, C, D])
     // 0 = Libur, 1 = Shift 1 (Pagi), 2 = Shift 2 (Siang), 3 = Shift 3 (Malam)
@@ -254,9 +255,10 @@
         ['1', '0', '2', '3']
     ];
 
-    // Daftar Hari Libur Pabrik 'X' (Rotation PAUSED)
+    // Daftar Hari Libur Serentak Pabrik 'X' (Seluruh Grup Libur & Rotasi PAUSED)
     const factoryHolidaysList = [
         "2026-12-31",
+        "2027-01-01",
         "2027-03-10",
         "2027-03-11"
     ];
@@ -280,9 +282,14 @@
         }
 
         const customHolidays = {
-            "2026-12-31": "Tahun Baru / Libur Akhir Tahun",
-            "2027-03-10": "Hari Raya Idul Fitri 1448 H (Hari 1)",
-            "2027-03-11": "Hari Raya Idul Fitri 1448 H (Hari 2)",
+            "2026-12-25": "Hari Raya Natal",
+            "2026-12-31": "Libur Akhir Tahun (Libur Pabrik X)",
+            "2027-01-01": "Tahun Baru Masehi (Libur Pabrik X)",
+            "2027-01-05": "Isra' Mi'raj Nabi Muhammad SAW",
+            "2027-02-06": "Tahun Baru Imlek 2578",
+            "2027-03-08": "Hari Raya Nyepi (Tahun Baru Saka 1949)",
+            "2027-03-10": "Hari Raya Idul Fitri 1448H (Libur Pabrik X)",
+            "2027-03-11": "Hari Raya Idul Fitri 1448H (Libur Pabrik X)",
             "2027-03-26": "Wafat Yesus Kristus"
         };
 
@@ -315,8 +322,8 @@
             yearSelect.appendChild(opt);
         }
 
-        monthSelect.value = 2; // Default Maret
-        yearSelect.value = 2027;
+        monthSelect.value = 10; // November 2026
+        yearSelect.value = 2026;
         document.getElementById("footerYear").textContent = new Date().getFullYear();
     }
 
@@ -385,7 +392,7 @@
                 groupAState = { type: "Libur", label: "Libur Pabrik (X)", start: "", end: "" };
             } else {
                 let workOffset = getWorkDayOffset(currentDate);
-                let vectorIdx = (workOffset % 20 + 20) % 20;
+                let vectorIdx = ((anchorMasterIndex + workOffset) % 20 + 20) % 20;
                 let dayVector = masterSequence[vectorIdx];
                 
                 ['A', 'B', 'C', 'D'].forEach((grp, idx) => {
@@ -404,9 +411,16 @@
             const isNationalHoliday = !!holidayText || isFactoryHoliday;
 
             const tr = document.createElement("tr");
-            if (isNationalHoliday) tr.style.backgroundColor = "#fff1f2";
+            if (isFactoryHoliday) {
+                tr.style.backgroundColor = "#fee2e2";
+            } else if (isNationalHoliday) {
+                tr.style.backgroundColor = "#fff1f2";
+            }
 
             const formatGroup = (grpList) => {
+                if (isFactoryHoliday) {
+                    return `<span class="badge b-nasional" style="padding: 4px 15px; font-weight: bold;">X (LIBUR PABRIK)</span>`;
+                }
                 return grpList.map(g => {
                     let badgeClass = `badge badge-${g.toLowerCase()}`;
                     let highlightClass = (g === 'A') ? 'highlight-a' : '';
@@ -431,9 +445,9 @@
             tr.innerHTML = `
                 <td><b>${d} ${monthNames[month]}</b></td>
                 <td>${dayName}</td>
-                <td>${formatGroup(dayShifts['Shift 1'])}</td>
-                <td>${formatGroup(dayShifts['Shift 2'])}</td>
-                <td>${formatGroup(dayShifts['Shift 3'])}</td>
+                <td>${isFactoryHoliday ? '-' : formatGroup(dayShifts['Shift 1'])}</td>
+                <td>${isFactoryHoliday ? '-' : formatGroup(dayShifts['Shift 2'])}</td>
+                <td>${isFactoryHoliday ? '-' : formatGroup(dayShifts['Shift 3'])}</td>
                 <td>${formatGroup(dayShifts['Libur'])}</td>
                 <td class="holiday-note">${isNationalHoliday ? `🔴 ${holidayText || 'Libur Pabrik'} (Magang Libur)` : '-'}</td>
                 <td class="gcal-col" style="${showGCal ? 'display: table-cell;' : 'display: none;'}">${gcalBtnHtml}</td>
@@ -463,12 +477,12 @@
 
             const toIcsTime = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
 
-            icsContent += "BEGIN:VEVENT\n";
+                        icsContent += "BEGIN:VEVENT\n";
             icsContent += `UID:gt-shift-${evt.dateStr}-${i}@ayub.dev\n`;
             icsContent += `DTSTART:${toIcsTime(startD)}\n`;
             icsContent += `DTEND:${toIcsTime(endD)}\n`;
             icsContent += `SUMMARY:${evt.title}\n`;
-            icsContent += "DESCRIPTION:Jadwal Shift Magang PT Gajah Tunggal Tbk\\nSistem Rotasi 4G3S Resmi\n";
+            icsContent += "DESCRIPTION:Jadwal Shift Magang PT Gajah Tunggal Tbk\nSistem Rotasi 4G3S Resmi\n";
             icsContent += "LOCATION:PT Gajah Tunggal Tbk, Tangerang\n";
             icsContent += "END:VEVENT\n";
         });
@@ -490,7 +504,7 @@
     monthSelect.addEventListener("change", renderSchedule);
     yearSelect.addEventListener("change", renderSchedule);
 
-        document.getElementById("prevBtn").addEventListener("click", () => {
+    document.getElementById("prevBtn").addEventListener("click", () => {
         let m = parseInt(monthSelect.value);
         let y = parseInt(yearSelect.value);
         if (m === 0) { monthSelect.value = 11; yearSelect.value = y - 1; }
@@ -507,8 +521,8 @@
     });
 
     document.getElementById("todayBtn").addEventListener("click", () => {
-        monthSelect.value = 2; // Maret
-        yearSelect.value = 2027;
+        monthSelect.value = 10; // November
+        yearSelect.value = 2026;
         renderSchedule();
     });
 
