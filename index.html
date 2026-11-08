@@ -172,7 +172,7 @@
 <div class="container">
     <header>
         <h1>Kalender Shift Work & Libur Nasional</h1>
-        <p>PT Gajah Tunggal Tbk — Sistem Rotasi 4 Grup 3 Shift (A, B, C, D)</p>
+        <p>PT Gajah Tunggal Tbk — Sistem Rotasi Resmi 4G3S (A, B, C, D)</p>
     </header>
 
     <div class="controls">
@@ -204,7 +204,7 @@
         <div class="legend-item"><span class="badge badge-b">Grup B</span> Kuning</div>
         <div class="legend-item"><span class="badge badge-c">Grup C</span> Hijau</div>
         <div class="legend-item"><span class="badge badge-d">Grup D</span> Biru</div>
-        <div class="legend-item" style="margin-left: 15px;"><span class="badge b-nasional">Merah</span> Libur Nasional Magang</div>
+        <div class="legend-item" style="margin-left: 15px;"><span class="badge b-nasional">Merah</span> Libur Pabrik / Nasional</div>
     </div>
 
     <div class="table-container">
@@ -234,29 +234,37 @@
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-    const anchorDate = new Date(2026, 10, 8);
-    const groupOffsets = { 'A': 0, 'D': 5, 'C': 10, 'B': 15 };
-    const holidayCache = {};
+    // Anchor Date: 1 Maret 2027 (Master Offset = 0)
+    const anchorDate = new Date(2027, 2, 1);
+    
+    // Master 20-Day Rotation Sequence (Vector: [A, B, C, D])
+    // 0 = Libur, 1 = Shift 1 (Pagi), 2 = Shift 2 (Siang), 3 = Shift 3 (Malam)
+    const masterSequence = [
+        ['0', '1', '2', '3'], ['0', '1', '2', '3'],
+        ['3', '1', '2', '0'], ['3', '1', '2', '0'],
+        ['3', '1', '0', '2'],
+        ['3', '0', '1', '2'], ['3', '0', '1', '2'],
+        ['0', '3', '1', '2'], ['0', '3', '1', '2'],
+        ['2', '3', '1', '0'],
+        ['2', '3', '0', '1'], ['2', '3', '0', '1'],
+        ['2', '0', '3', '1'], ['2', '0', '3', '1'],
+        ['0', '2', '3', '1'],
+        ['1', '2', '3', '0'], ['1', '2', '3', '0'],
+        ['1', '2', '0', '3'], ['1', '2', '0', '3'],
+        ['1', '0', '2', '3']
+    ];
 
-    function getShiftState(offsetInCycle) {
-        let idx = (offsetInCycle % 40 + 40) % 40;
-        if (idx >= 0 && idx < 5) return { type: "Shift 2", label: "Shift 2 (Siang)", start: "15:00", end: "23:00" };
-        if (idx === 5) return { type: "Libur", label: "Libur", start: "", end: "" };
-        if (idx >= 6 && idx < 11) return { type: "Shift 1", label: "Shift 1 (Pagi)", start: "07:00", end: "15:00" };
-        if (idx >= 11 && idx < 13) return { type: "Libur", label: "Libur", start: "", end: "" };
-        if (idx >= 13 && idx < 18) return { type: "Shift 3", label: "Shift 3 (Malam)", start: "23:00", end: "07:00" };
-        if (idx >= 18 && idx < 20) return { type: "Libur", label: "Libur", start: "", end: "" };
-        if (idx >= 20 && idx < 25) return { type: "Shift 2", label: "Shift 2 (Siang)", start: "15:00", end: "23:00" };
-        if (idx === 25) return { type: "Libur", label: "Libur", start: "", end: "" };
-        if (idx >= 26 && idx < 31) return { type: "Shift 1", label: "Shift 1 (Pagi)", start: "07:00", end: "15:00" };
-        if (idx >= 31 && idx < 33) return { type: "Libur", label: "Libur", start: "", end: "" };
-        if (idx >= 33 && idx < 38) return { type: "Shift 3", label: "Shift 3 (Malam)", start: "23:00", end: "07:00" };
-        if (idx >= 38 && idx < 40) return { type: "Libur", label: "Libur", start: "", end: "" };
-    }
+    // Daftar Hari Libur Pabrik 'X' (Rotation PAUSED)
+    const factoryHolidaysList = [
+        "2026-12-31",
+        "2027-03-10",
+        "2027-03-11"
+    ];
+
+    const holidayCache = {};
 
     async function fetchHolidays(year) {
         let holidays = {};
-
         if (holidayCache[year]) {
             holidays = { ...holidayCache[year] };
         } else {
@@ -271,13 +279,11 @@
             }
         }
 
-        // Custom Manual Override (Lebaran 2027, Akhir Tahun, & Libur Penting)
         const customHolidays = {
             "2026-12-31": "Tahun Baru / Libur Akhir Tahun",
-            "2027-03-09": "Hari Raya Idul Fitri 1448 H (Hari 1)",
-            "2027-03-10": "Hari Raya Idul Fitri 1448 H (Hari 2)",
-            "2027-03-11": "Cuti Bersama Idul Fitri 1448 H",
-            "2027-03-12": "Cuti Bersama Idul Fitri 1448 H"
+            "2027-03-10": "Hari Raya Idul Fitri 1448 H (Hari 1)",
+            "2027-03-11": "Hari Raya Idul Fitri 1448 H (Hari 2)",
+            "2027-03-26": "Wafat Yesus Kristus"
         };
 
         holidays = { ...holidays, ...customHolidays };
@@ -309,9 +315,34 @@
             yearSelect.appendChild(opt);
         }
 
-        monthSelect.value = 10;
-        yearSelect.value = 2026;
+        monthSelect.value = 2; // Default Maret
+        yearSelect.value = 2027;
         document.getElementById("footerYear").textContent = new Date().getFullYear();
+    }
+
+    function getWorkDayOffset(targetDate) {
+        let curr = new Date(anchorDate);
+        let workDays = 0;
+
+        if (targetDate >= anchorDate) {
+            while (curr < targetDate) {
+                let dStr = curr.toISOString().split('T')[0];
+                if (!factoryHolidaysList.includes(dStr)) {
+                    workDays++;
+                }
+                curr.setDate(curr.getDate() + 1);
+            }
+            return workDays;
+        } else {
+            while (curr > targetDate) {
+                curr.setDate(curr.getDate() - 1);
+                let dStr = curr.toISOString().split('T')[0];
+                if (!factoryHolidaysList.includes(dStr)) {
+                    workDays--;
+                }
+            }
+            return workDays;
+        }
     }
 
     function createGCalUrl(title, dateStr, startTimeStr, endTimeStr) {
@@ -345,21 +376,32 @@
             const dateStr = `${year}-${monthStr}-${dayStr}`;
             const dayName = dayNames[currentDate.getDay()];
 
-            const timeDiff = currentDate.getTime() - anchorDate.getTime();
-            const diffDays = Math.round(timeDiff / (1000 * 3600 * 24));
-
+            const isFactoryHoliday = factoryHolidaysList.includes(dateStr);
             let dayShifts = { 'Shift 1': [], 'Shift 2': [], 'Shift 3': [], 'Libur': [] };
             let groupAState = null;
 
-            ['A', 'B', 'C', 'D'].forEach(grp => {
-                let totalOffset = diffDays + groupOffsets[grp];
-                let state = getShiftState(totalOffset);
-                dayShifts[state.type].push(grp);
-                if (grp === 'A') groupAState = state;
-            });
+            if (isFactoryHoliday) {
+                ['A', 'B', 'C', 'D'].forEach(g => dayShifts['Libur'].push(g));
+                groupAState = { type: "Libur", label: "Libur Pabrik (X)", start: "", end: "" };
+            } else {
+                let workOffset = getWorkDayOffset(currentDate);
+                let vectorIdx = (workOffset % 20 + 20) % 20;
+                let dayVector = masterSequence[vectorIdx];
+                
+                ['A', 'B', 'C', 'D'].forEach((grp, idx) => {
+                    let val = dayVector[idx];
+                    let st = { type: "Libur", label: "Libur", start: "", end: "" };
+                    if (val === '1') st = { type: "Shift 1", label: "Shift 1 (Pagi)", start: "07:00", end: "15:00" };
+                    else if (val === '2') st = { type: "Shift 2", label: "Shift 2 (Siang)", start: "15:00", end: "23:00" };
+                    else if (val === '3') st = { type: "Shift 3", label: "Shift 3 (Malam)", start: "23:00", end: "07:00" };
+
+                    dayShifts[st.type].push(grp);
+                    if (grp === 'A') groupAState = st;
+                });
+            }
 
             const holidayText = holidays[dateStr];
-            const isNationalHoliday = !!holidayText;
+            const isNationalHoliday = !!holidayText || isFactoryHoliday;
 
             const tr = document.createElement("tr");
             if (isNationalHoliday) tr.style.backgroundColor = "#fff1f2";
@@ -393,7 +435,7 @@
                 <td>${formatGroup(dayShifts['Shift 2'])}</td>
                 <td>${formatGroup(dayShifts['Shift 3'])}</td>
                 <td>${formatGroup(dayShifts['Libur'])}</td>
-                <td class="holiday-note">${isNationalHoliday ? `🔴 ${holidayText} (Magang Libur)` : '-'}</td>
+                <td class="holiday-note">${isNationalHoliday ? `🔴 ${holidayText || 'Libur Pabrik'} (Magang Libur)` : '-'}</td>
                 <td class="gcal-col" style="${showGCal ? 'display: table-cell;' : 'display: none;'}">${gcalBtnHtml}</td>
             `;
 
@@ -426,7 +468,7 @@
             icsContent += `DTSTART:${toIcsTime(startD)}\n`;
             icsContent += `DTEND:${toIcsTime(endD)}\n`;
             icsContent += `SUMMARY:${evt.title}\n`;
-            icsContent += "DESCRIPTION:Jadwal Shift Magang PT Gajah Tunggal Tbk\\nSistem Rotasi 4 Grup 3 Shift\n";
+            icsContent += "DESCRIPTION:Jadwal Shift Magang PT Gajah Tunggal Tbk\\nSistem Rotasi 4G3S Resmi\n";
             icsContent += "LOCATION:PT Gajah Tunggal Tbk, Tangerang\n";
             icsContent += "END:VEVENT\n";
         });
@@ -448,7 +490,7 @@
     monthSelect.addEventListener("change", renderSchedule);
     yearSelect.addEventListener("change", renderSchedule);
 
-    document.getElementById("prevBtn").addEventListener("click", () => {
+        document.getElementById("prevBtn").addEventListener("click", () => {
         let m = parseInt(monthSelect.value);
         let y = parseInt(yearSelect.value);
         if (m === 0) { monthSelect.value = 11; yearSelect.value = y - 1; }
@@ -465,8 +507,8 @@
     });
 
     document.getElementById("todayBtn").addEventListener("click", () => {
-        monthSelect.value = 10;
-        yearSelect.value = 2026;
+        monthSelect.value = 2; // Maret
+        yearSelect.value = 2027;
         renderSchedule();
     });
 
