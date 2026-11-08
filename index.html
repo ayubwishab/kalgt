@@ -56,11 +56,43 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .control-group { display: flex; align-items: center; gap: 8px; }
+        .control-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         select, button { padding: 8px 14px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.95rem; outline: none; }
         select { background: #fff; cursor: pointer; }
         button { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         button:hover { background: var(--primary); }
+
+        .btn-gcal { background: #0f9d58; }
+        .btn-gcal:hover { background: #0b8043; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1; transition: .4s; border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #0f9d58; }
+        input:checked + .slider:before { transform: translateX(18px); }
 
         .legend {
             display: flex;
@@ -75,7 +107,6 @@
         }
         .legend-item { display: flex; align-items: center; gap: 6px; }
         
-        /* Stylings Badge */
         .badge { 
             padding: 4px 10px; 
             border-radius: 6px; 
@@ -87,7 +118,7 @@
         }
 
         .badge-a { background-color: var(--grup-a); }
-        .badge-b { background-color: var(--grup-b); color: #000000; } /* Text hitam agar jelas di warna kuning */
+        .badge-b { background-color: var(--grup-b); color: #000000; }
         .badge-c { background-color: var(--grup-c); }
         .badge-d { background-color: var(--grup-d); }
 
@@ -103,18 +134,30 @@
             overflow-x: auto;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
-        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 650px; }
+        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 700px; }
         th, td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
         th { background: #f1f5f9; color: var(--primary); font-weight: 700; position: sticky; top: 0; }
         tr:hover { background-color: #f8fafc; }
         
-        /* Sorotan Khusus Grup A */
         .highlight-a { 
             border: 2px solid #000000 !important;
             transform: scale(1.05);
         }
         
         .holiday-note { text-align: left; font-size: 0.8rem; color: var(--national-holiday); font-weight: 600; }
+
+        .gcal-btn-link {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            background: #4285f4;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+        .gcal-btn-link:hover { background: #1a73e8; }
+        .gcal-col { display: none; }
 
         footer { text-align: center; margin-top: 25px; font-size: 0.85rem; color: var(--text-muted); padding: 10px; }
 
@@ -144,6 +187,16 @@
             <button id="todayBtn">Bulan Ini</button>
             <button id="nextBtn">Bulan Depan &rarr;</button>
         </div>
+        <div class="control-group">
+            <div class="toggle-container">
+                <span>Google Calendar</span>
+                <label class="switch">
+                    <input type="checkbox" id="gcalToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <button id="downloadIcsBtn" class="btn-gcal" style="display: none;">📅 Export .ICS (Bulan Ini)</button>
+        </div>
     </div>
 
     <div class="legend">
@@ -158,13 +211,14 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 12%;">Tgl</th>
-                    <th style="width: 14%;">Hari</th>
-                    <th style="width: 15%;">Shift 1 (Pagi)</th>
-                    <th style="width: 15%;">Shift 2 (Siang)</th>
-                    <th style="width: 15%;">Shift 3 (Malam)</th>
-                    <th style="width: 14%;">Libur Rotasi</th>
-                    <th style="width: 15%;">Keterangan Libur</th>
+                    <th style="width: 10%;">Tgl</th>
+                    <th style="width: 12%;">Hari</th>
+                    <th style="width: 14%;">Shift 1 (Pagi)</th>
+                    <th style="width: 14%;">Shift 2 (Siang)</th>
+                    <th style="width: 14%;">Shift 3 (Malam)</th>
+                    <th style="width: 12%;">Libur Rotasi</th>
+                    <th style="width: 14%;">Keterangan Libur</th>
+                    <th class="gcal-col" style="width: 10%;">Google Calendar</th>
                 </tr>
             </thead>
             <tbody id="scheduleBody"></tbody>
@@ -180,59 +234,64 @@
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-    // Anchor Date: 8 Nov 2026
     const anchorDate = new Date(2026, 10, 8);
     const groupOffsets = { 'A': 0, 'D': 5, 'C': 10, 'B': 15 };
-
-    // Holiday Cache per Year
     const holidayCache = {};
 
     function getShiftState(offsetInCycle) {
         let idx = (offsetInCycle % 40 + 40) % 40;
-        if (idx >= 0 && idx < 5) return { type: "Shift 2", label: "Shift 2 (Siang)" };
-        if (idx === 5) return { type: "Libur", label: "Libur" };
-        if (idx >= 6 && idx < 11) return { type: "Shift 1", label: "Shift 1 (Pagi)" };
-        if (idx >= 11 && idx < 13) return { type: "Libur", label: "Libur" };
-        if (idx >= 13 && idx < 18) return { type: "Shift 3", label: "Shift 3 (Malam)" };
-        if (idx >= 18 && idx < 20) return { type: "Libur", label: "Libur" };
-        if (idx >= 20 && idx < 25) return { type: "Shift 2", label: "Shift 2 (Siang)" };
-        if (idx === 25) return { type: "Libur", label: "Libur" };
-        if (idx >= 26 && idx < 31) return { type: "Shift 1", label: "Shift 1 (Pagi)" };
-        if (idx >= 31 && idx < 33) return { type: "Libur", label: "Libur" };
-        if (idx >= 33 && idx < 38) return { type: "Shift 3", label: "Shift 3 (Malam)" };
-        if (idx >= 38 && idx < 40) return { type: "Libur", label: "Libur" };
+        if (idx >= 0 && idx < 5) return { type: "Shift 2", label: "Shift 2 (Siang)", start: "15:00", end: "23:00" };
+        if (idx === 5) return { type: "Libur", label: "Libur", start: "", end: "" };
+        if (idx >= 6 && idx < 11) return { type: "Shift 1", label: "Shift 1 (Pagi)", start: "07:00", end: "15:00" };
+        if (idx >= 11 && idx < 13) return { type: "Libur", label: "Libur", start: "", end: "" };
+        if (idx >= 13 && idx < 18) return { type: "Shift 3", label: "Shift 3 (Malam)", start: "23:00", end: "07:00" };
+        if (idx >= 18 && idx < 20) return { type: "Libur", label: "Libur", start: "", end: "" };
+        if (idx >= 20 && idx < 25) return { type: "Shift 2", label: "Shift 2 (Siang)", start: "15:00", end: "23:00" };
+        if (idx === 25) return { type: "Libur", label: "Libur", start: "", end: "" };
+        if (idx >= 26 && idx < 31) return { type: "Shift 1", label: "Shift 1 (Pagi)", start: "07:00", end: "15:00" };
+        if (idx >= 31 && idx < 33) return { type: "Libur", label: "Libur", start: "", end: "" };
+        if (idx >= 33 && idx < 38) return { type: "Shift 3", label: "Shift 3 (Malam)", start: "23:00", end: "07:00" };
+        if (idx >= 38 && idx < 40) return { type: "Libur", label: "Libur", start: "", end: "" };
     }
 
     async function fetchHolidays(year) {
-        if (holidayCache[year]) return holidayCache[year];
+        let holidays = {};
 
-        try {
-            const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
-            if (!res.ok) throw new Error("Gagal mengambil data dari API");
-            const data = await res.json();
-            
-            const holidays = {};
-            data.forEach(item => {
-                holidays[item.date] = item.localName || item.name;
-            });
-            
-            holidayCache[year] = holidays;
-            return holidays;
-        } catch (err) {
-            console.warn(`Menggunakan fallback libur offline untuk tahun ${year}`);
-            return {
-                [`${year}-01-01`]: "Tahun Baru Masehi",
-                [`${year}-05-01`]: "Hari Buruh Internasional",
-                [`${year}-06-01`]: "Hari Lahir Pancasila",
-                [`${year}-08-17`]: "Hari Kemerdekaan RI",
-                [`${year}-12-25`]: "Hari Raya Natal"
-            };
+        if (holidayCache[year]) {
+            holidays = { ...holidayCache[year] };
+        } else {
+            try {
+                const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
+                if (res.ok) {
+                    const data = await res.json();
+                    data.forEach(item => holidays[item.date] = item.localName || item.name);
+                }
+            } catch (err) {
+                console.warn(`Menggunakan fallback offline untuk tahun ${year}`);
+            }
         }
+
+        // Custom Manual Override (Lebaran 2027, Akhir Tahun, & Libur Penting)
+        const customHolidays = {
+            "2026-12-31": "Tahun Baru / Libur Akhir Tahun",
+            "2027-03-09": "Hari Raya Idul Fitri 1448 H (Hari 1)",
+            "2027-03-10": "Hari Raya Idul Fitri 1448 H (Hari 2)",
+            "2027-03-11": "Cuti Bersama Idul Fitri 1448 H",
+            "2027-03-12": "Cuti Bersama Idul Fitri 1448 H"
+        };
+
+        holidays = { ...holidays, ...customHolidays };
+        holidayCache[year] = holidays;
+        return holidays;
     }
 
     const monthSelect = document.getElementById("monthSelect");
     const yearSelect = document.getElementById("yearSelect");
     const scheduleBody = document.getElementById("scheduleBody");
+    const gcalToggle = document.getElementById("gcalToggle");
+    const downloadIcsBtn = document.getElementById("downloadIcsBtn");
+
+    let currentMonthEvents = [];
 
     function initSelectors() {
         monthNames.forEach((m, i) => {
@@ -250,33 +309,53 @@
             yearSelect.appendChild(opt);
         }
 
-        monthSelect.value = 10; // November
+        monthSelect.value = 10;
         yearSelect.value = 2026;
         document.getElementById("footerYear").textContent = new Date().getFullYear();
+    }
+
+    function createGCalUrl(title, dateStr, startTimeStr, endTimeStr) {
+        if (!startTimeStr) return '#';
+        let startDateObj = new Date(`${dateStr}T${startTimeStr}:00`);
+        let endDateObj = new Date(`${dateStr}T${endTimeStr}:00`);
+        
+        if (startTimeStr === "23:00") {
+            endDateObj.setDate(endDateObj.getDate() + 1);
+        }
+
+        const toIsoUtc = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+        const dates = `${toIsoUtc(startDateObj)}/${toIsoUtc(endDateObj)}`;
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates}&details=${encodeURIComponent('Jadwal Shift Magang PT Gajah Tunggal Tbk')}&location=PT+Gajah+Tunggal+Tbk`;
     }
 
     async function renderSchedule() {
         const month = parseInt(monthSelect.value);
         const year = parseInt(yearSelect.value);
         scheduleBody.innerHTML = "";
+        currentMonthEvents = [];
 
         const holidays = await fetchHolidays(year);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const showGCal = gcalToggle.checked;
 
         for (let d = 1; d <= daysInMonth; d++) {
             const currentDate = new Date(year, month, d);
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dayStr = String(d).padStart(2, '0');
+            const dateStr = `${year}-${monthStr}-${dayStr}`;
             const dayName = dayNames[currentDate.getDay()];
 
             const timeDiff = currentDate.getTime() - anchorDate.getTime();
             const diffDays = Math.round(timeDiff / (1000 * 3600 * 24));
 
             let dayShifts = { 'Shift 1': [], 'Shift 2': [], 'Shift 3': [], 'Libur': [] };
+            let groupAState = null;
 
             ['A', 'B', 'C', 'D'].forEach(grp => {
                 let totalOffset = diffDays + groupOffsets[grp];
                 let state = getShiftState(totalOffset);
                 dayShifts[state.type].push(grp);
+                if (grp === 'A') groupAState = state;
             });
 
             const holidayText = holidays[dateStr];
@@ -293,6 +372,20 @@
                 }).join(" ");
             };
 
+            let gcalBtnHtml = '-';
+            if (groupAState && groupAState.type !== 'Libur') {
+                const title = `GT ${groupAState.label} (Grup A)`;
+                const gcalUrl = createGCalUrl(title, dateStr, groupAState.start, groupAState.end);
+                gcalBtnHtml = `<a href="${gcalUrl}" target="_blank" class="gcal-btn-link">+ GCal</a>`;
+
+                currentMonthEvents.push({
+                    title: title,
+                    dateStr: dateStr,
+                    start: groupAState.start,
+                    end: groupAState.end
+                });
+            }
+
             tr.innerHTML = `
                 <td><b>${d} ${monthNames[month]}</b></td>
                 <td>${dayName}</td>
@@ -301,12 +394,57 @@
                 <td>${formatGroup(dayShifts['Shift 3'])}</td>
                 <td>${formatGroup(dayShifts['Libur'])}</td>
                 <td class="holiday-note">${isNationalHoliday ? `🔴 ${holidayText} (Magang Libur)` : '-'}</td>
+                <td class="gcal-col" style="${showGCal ? 'display: table-cell;' : 'display: none;'}">${gcalBtnHtml}</td>
             `;
 
             scheduleBody.appendChild(tr);
         }
+
+        document.querySelectorAll('.gcal-col').forEach(el => {
+            el.style.display = showGCal ? 'table-cell' : 'none';
+        });
+        downloadIcsBtn.style.display = showGCal ? 'inline-block' : 'none';
     }
 
+    downloadIcsBtn.addEventListener("click", () => {
+        if (currentMonthEvents.length === 0) {
+            alert("Tidak ada jadwal shift kerja untuk bulan ini.");
+            return;
+        }
+
+        let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Ayub Shift Schedule//ID\n";
+        
+        currentMonthEvents.forEach((evt, i) => {
+            let startD = new Date(`${evt.dateStr}T${evt.start}:00`);
+            let endD = new Date(`${evt.dateStr}T${evt.end}:00`);
+            if (evt.start === "23:00") endD.setDate(endD.getDate() + 1);
+
+            const toIcsTime = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+
+            icsContent += "BEGIN:VEVENT\n";
+            icsContent += `UID:gt-shift-${evt.dateStr}-${i}@ayub.dev\n`;
+            icsContent += `DTSTART:${toIcsTime(startD)}\n`;
+            icsContent += `DTEND:${toIcsTime(endD)}\n`;
+            icsContent += `SUMMARY:${evt.title}\n`;
+            icsContent += "DESCRIPTION:Jadwal Shift Magang PT Gajah Tunggal Tbk\\nSistem Rotasi 4 Grup 3 Shift\n";
+            icsContent += "LOCATION:PT Gajah Tunggal Tbk, Tangerang\n";
+            icsContent += "END:VEVENT\n";
+        });
+
+        icsContent += "END:VCALENDAR";
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        const mName = monthNames[parseInt(monthSelect.value)];
+        const yName = yearSelect.value;
+        link.setAttribute('download', `Jadwal_Shift_GT_GrupA_${mName}_${yName}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    gcalToggle.addEventListener("change", renderSchedule);
     monthSelect.addEventListener("change", renderSchedule);
     yearSelect.addEventListener("change", renderSchedule);
 
