@@ -21,6 +21,12 @@
             --libur: #fee2e2;
             --libur-text: #991b1b;
             --national-holiday: #dc2626;
+
+            /* Warna Khusus Per Grup */
+            --grup-a: #ef4444; /* Merah */
+            --grup-b: #eab308; /* Kuning */
+            --grup-c: #22c55e; /* Hijau */
+            --grup-d: #3b82f6; /* Biru */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -68,7 +74,23 @@
             font-size: 0.85rem;
         }
         .legend-item { display: flex; align-items: center; gap: 6px; }
-        .badge { padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem; }
+        
+        /* Stylings Badge */
+        .badge { 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-weight: 700; 
+            font-size: 0.8rem; 
+            color: #ffffff;
+            display: inline-block;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .badge-a { background-color: var(--grup-a); }
+        .badge-b { background-color: var(--grup-b); color: #000000; } /* Text hitam agar jelas di warna kuning */
+        .badge-c { background-color: var(--grup-c); }
+        .badge-d { background-color: var(--grup-d); }
+
         .b-shift1 { background: var(--shift1); color: var(--shift1-text); }
         .b-shift2 { background: var(--shift2); color: var(--shift2-text); }
         .b-shift3 { background: var(--shift3); color: var(--shift3-text); }
@@ -85,7 +107,13 @@
         th, td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
         th { background: #f1f5f9; color: var(--primary); font-weight: 700; position: sticky; top: 0; }
         tr:hover { background-color: #f8fafc; }
-        .highlight-a { font-weight: bold; border: 2px solid var(--accent) !important; }
+        
+        /* Sorotan Khusus Grup A */
+        .highlight-a { 
+            border: 2px solid #000000 !important;
+            transform: scale(1.05);
+        }
+        
         .holiday-note { text-align: left; font-size: 0.8rem; color: var(--national-holiday); font-weight: 600; }
 
         footer { text-align: center; margin-top: 25px; font-size: 0.85rem; color: var(--text-muted); padding: 10px; }
@@ -119,11 +147,11 @@
     </div>
 
     <div class="legend">
-        <div class="legend-item"><span class="badge b-shift1">Shift 1</span> Pagi (07:00 - 15:00)</div>
-        <div class="legend-item"><span class="badge b-shift2">Shift 2</span> Siang (15:00 - 23:00)</div>
-        <div class="legend-item"><span class="badge b-shift3">Shift 3</span> Malam (23:00 - 07:00)</div>
-        <div class="legend-item"><span class="badge b-libur">Off</span> Libur Rotasi Shift</div>
-        <div class="legend-item"><span class="badge b-nasional">Merah</span> Libur Nasional Magang</div>
+        <div class="legend-item"><span class="badge badge-a">Grup A</span> Merah</div>
+        <div class="legend-item"><span class="badge badge-b">Grup B</span> Kuning</div>
+        <div class="legend-item"><span class="badge badge-c">Grup C</span> Hijau</div>
+        <div class="legend-item"><span class="badge badge-d">Grup D</span> Biru</div>
+        <div class="legend-item" style="margin-left: 15px;"><span class="badge b-nasional">Merah</span> Libur Nasional Magang</div>
     </div>
 
     <div class="table-container">
@@ -149,43 +177,15 @@
 </div>
 
 <script>
-    const nationalHolidays = {
-        "2026-01-01": "Tahun Baru 2026 Masehi",
-        "2026-01-16": "Isra Mikraj Nabi Muhammad SAW",
-        "2026-02-17": "Tahun Baru Imlek 2577 Kongzili",
-        "2026-03-19": "Hari Suci Nyepi (Tahun Baru Saka 1948)",
-        "2026-03-20": "Hari Raya Idul Fitri 1447 Hijriah (Hari 1)",
-        "2026-03-21": "Hari Raya Idul Fitri 1447 Hijriah (Hari 2)",
-        "2026-04-03": "Wafat Yesus Kristus",
-        "2026-04-05": "Hari Paskah",
-        "2026-05-01": "Hari Buruh Internasional",
-        "2026-05-14": "Kenaikan Yesus Kristus",
-        "2026-05-27": "Hari Raya Idul Adha 1447 Hijriah",
-        "2026-05-31": "Hari Raya Waisak 2570 BE",
-        "2026-06-01": "Hari Lahir Pancasila",
-        "2026-06-16": "Tahun Baru Islam 1448 Hijriah",
-        "2026-08-17": "Hari Kemerdekaan Republik Indonesia",
-        "2026-08-25": "Maulid Nabi Muhammad SAW",
-        "2026-12-25": "Hari Raya Natal",
-
-        "2027-01-01": "Tahun Baru 2027 Masehi",
-        "2027-02-06": "Tahun Baru Imlek 2578 Kongzili",
-        "2027-03-09": "Hari Raya Idul Fitri 1448 Hijriah",
-        "2027-03-26": "Wafat Yesus Kristus",
-        "2027-05-01": "Hari Buruh Internasional",
-        "2027-05-06": "Kenaikan Yesus Kristus",
-        "2027-05-16": "Hari Raya Idul Adha 1448 Hijriah",
-        "2027-05-20": "Hari Raya Waisak 2571 BE",
-        "2027-06-01": "Hari Lahir Pancasila",
-        "2027-08-17": "Hari Kemerdekaan Republik Indonesia",
-        "2027-12-25": "Hari Raya Natal"
-    };
-
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
+    // Anchor Date: 8 Nov 2026
     const anchorDate = new Date(2026, 10, 8);
     const groupOffsets = { 'A': 0, 'D': 5, 'C': 10, 'B': 15 };
+
+    // Holiday Cache per Year
+    const holidayCache = {};
 
     function getShiftState(offsetInCycle) {
         let idx = (offsetInCycle % 40 + 40) % 40;
@@ -203,6 +203,33 @@
         if (idx >= 38 && idx < 40) return { type: "Libur", label: "Libur" };
     }
 
+    async function fetchHolidays(year) {
+        if (holidayCache[year]) return holidayCache[year];
+
+        try {
+            const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
+            if (!res.ok) throw new Error("Gagal mengambil data dari API");
+            const data = await res.json();
+            
+            const holidays = {};
+            data.forEach(item => {
+                holidays[item.date] = item.localName || item.name;
+            });
+            
+            holidayCache[year] = holidays;
+            return holidays;
+        } catch (err) {
+            console.warn(`Menggunakan fallback libur offline untuk tahun ${year}`);
+            return {
+                [`${year}-01-01`]: "Tahun Baru Masehi",
+                [`${year}-05-01`]: "Hari Buruh Internasional",
+                [`${year}-06-01`]: "Hari Lahir Pancasila",
+                [`${year}-08-17`]: "Hari Kemerdekaan RI",
+                [`${year}-12-25`]: "Hari Raya Natal"
+            };
+        }
+    }
+
     const monthSelect = document.getElementById("monthSelect");
     const yearSelect = document.getElementById("yearSelect");
     const scheduleBody = document.getElementById("scheduleBody");
@@ -216,23 +243,24 @@
         });
 
         const currentYr = new Date().getFullYear();
-        for (let y = currentYr - 1; y <= currentYr + 3; y++) {
+        for (let y = currentYr - 1; y <= currentYr + 5; y++) {
             let opt = document.createElement("option");
             opt.value = y;
             opt.textContent = y;
             yearSelect.appendChild(opt);
         }
 
-        monthSelect.value = 10;
+        monthSelect.value = 10; // November
         yearSelect.value = 2026;
         document.getElementById("footerYear").textContent = new Date().getFullYear();
     }
 
-    function renderSchedule() {
+    async function renderSchedule() {
         const month = parseInt(monthSelect.value);
         const year = parseInt(yearSelect.value);
         scheduleBody.innerHTML = "";
 
+        const holidays = await fetchHolidays(year);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -251,27 +279,27 @@
                 dayShifts[state.type].push(grp);
             });
 
-            const isNationalHoliday = nationalHolidays[dateStr] ? true : false;
-            const holidayText = nationalHolidays[dateStr] || "-";
+            const holidayText = holidays[dateStr];
+            const isNationalHoliday = !!holidayText;
 
             const tr = document.createElement("tr");
             if (isNationalHoliday) tr.style.backgroundColor = "#fff1f2";
 
-            const formatGroup = (grpList, typeClass) => {
+            const formatGroup = (grpList) => {
                 return grpList.map(g => {
-                    let badgeCls = `badge ${typeClass}`;
-                    let isGroupA = (g === 'A') ? 'highlight-a' : '';
-                    return `<span class="${badgeCls} ${isGroupA}">Grup ${g}</span>`;
+                    let badgeClass = `badge badge-${g.toLowerCase()}`;
+                    let highlightClass = (g === 'A') ? 'highlight-a' : '';
+                    return `<span class="${badgeClass} ${highlightClass}">Grup ${g}</span>`;
                 }).join(" ");
             };
 
             tr.innerHTML = `
                 <td><b>${d} ${monthNames[month]}</b></td>
                 <td>${dayName}</td>
-                <td>${formatGroup(dayShifts['Shift 1'], 'b-shift1')}</td>
-                <td>${formatGroup(dayShifts['Shift 2'], 'b-shift2')}</td>
-                <td>${formatGroup(dayShifts['Shift 3'], 'b-shift3')}</td>
-                <td>${formatGroup(dayShifts['Libur'], 'b-libur')}</td>
+                <td>${formatGroup(dayShifts['Shift 1'])}</td>
+                <td>${formatGroup(dayShifts['Shift 2'])}</td>
+                <td>${formatGroup(dayShifts['Shift 3'])}</td>
+                <td>${formatGroup(dayShifts['Libur'])}</td>
                 <td class="holiday-note">${isNationalHoliday ? `🔴 ${holidayText} (Magang Libur)` : '-'}</td>
             `;
 
@@ -309,4 +337,3 @@
 </script>
 </body>
 </html>
-
